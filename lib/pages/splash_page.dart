@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
+
 import 'package:provider/provider.dart';
 
-import '../pages/home_page.dart';
+import '../../constants/color_constants.dart';
 import '../providers/auth_provider.dart';
-import 'login_page.dart';
-
+import 'pages.dart';
 
 class SplashPage extends StatefulWidget {
   SplashPage({Key? key}) : super(key: key);
@@ -18,7 +17,7 @@ class SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 10), () {
+    Future.delayed(Duration(seconds: 1), () {
       // just delay for showing this slash page clearer because it too fast
       checkSignedIn();
     });
@@ -47,14 +46,16 @@ class SplashPageState extends State<SplashPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Lottie.network(
-            'https://assets9.lottiefiles.com/private_files/lf30_osufshhg.json'),
-
+            Image.asset(
+              "asset/images/splash.gif",
+              width: 100,
+              height: 100,
+            ),
             SizedBox(height: 20),
             Container(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(color: Colors.blue),
+              child: CircularProgressIndicator(color: ColorConstants.themeColor),
             ),
           ],
         ),
