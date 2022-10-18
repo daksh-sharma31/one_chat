@@ -1,37 +1,35 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:one_chat/constants/firestore_constants.dart';
+import 'package:one_chat/pages/login_page.dart';
 import 'package:provider/provider.dart';
 
 import '../../constants/app_constants.dart';
 import '../../constants/color_constants.dart';
 import '../../constants/firestore_constants.dart';
-
 import '../../utils/debouncer.dart';
 import '../Models/user_chat.dart';
-import '../models/models.dart';
+import '../constants/constants.dart';
 import '../models/popup_choices.dart';
 import '../providers/auth_provider.dart';
 import '../providers/home_provider.dart';
 import '../utils/utilities.dart';
 import '../widgets/loading_view.dart';
-import '../widgets/widgets.dart';
-import 'pages.dart';
 
+import 'pages.dart';
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);
 
   @override
   State createState() => HomePageState();
 }
-
 class HomePageState extends State<HomePage> {
   HomePageState({Key? key});
 
@@ -45,8 +43,17 @@ class HomePageState extends State<HomePage> {
   String _textSearch = "";
   bool isLoading = false;
 
-  late AuthProvider authProvider;
+   // Searching work
 
+  String username = "";
+  QuerySnapshot? searchSnapshot;
+  bool hasUserSearched = false;
+  User? user;
+  bool isJoined = false;
+  TextEditingController searchController = TextEditingController();
+  // till here
+
+  late AuthProvider authProvider;
   late HomeProvider homeProvider;
   late String currentUserId;
   Debouncer searchDebouncer = Debouncer(milliseconds: 300);
@@ -55,8 +62,7 @@ class HomePageState extends State<HomePage> {
 
   List<PopupChoices> choices = <PopupChoices>[
     PopupChoices(title: 'Settings', icon: Icons.settings),
-    PopupChoices(title: 'Log out', icon: Icons.exit_to_app),
-  ];
+    PopupChoices(title: 'Log out', icon: Icons.exit_to_app),];
 
   @override
   void initState() {
@@ -72,8 +78,8 @@ class HomePageState extends State<HomePage> {
         (Route<dynamic> route) => false,
       );
     }
-    registerNotification();
-    configLocalNotification();
+    // registerNotification();
+    // configLocalNotification();
     listScrollController.addListener(scrollListener);
   }
 
@@ -82,7 +88,12 @@ class HomePageState extends State<HomePage> {
     super.dispose();
     btnClearController.close();
   }
+   // Work for search Function
+  getCurrenrUserIdandName() async {
+    // await AuthProvider.firebaseUser.
+  }
 
+  // Till here
   void registerNotification() {
     firebaseMessaging.requestPermission();
 
@@ -104,14 +115,13 @@ class HomePageState extends State<HomePage> {
     });
   }
 
-  void configLocalNotification() {
-    AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
-    // IOSInitializationSettings initializationSettingsIOS = IOSInitializationSettings();
-    // InitializationSettings initializationSettings =
-        // InitializationSettings(android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
-    // flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  }
-
+  // void configLocalNotification() {
+  //   AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
+  //   // IOSInitializationSettings initializationSettingsIOS = IOSInitializationSettings();
+  //   // InitializationSettings initializationSettings =
+  //       // InitializationSettings(android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
+  //   // flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  // }
   void scrollListener() {
     if (listScrollController.offset >= listScrollController.position.maxScrollExtent &&
         !listScrollController.position.outOfRange) {
@@ -128,7 +138,6 @@ class HomePageState extends State<HomePage> {
       Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsPage()));
     }
   }
-
   void showNotification(RemoteNotification remoteNotification) async {
     AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
       Platform.isAndroid ? 'com.dfa.flutterchatdemo' : 'com.duytq.flutterchatdemo',
@@ -141,9 +150,7 @@ class HomePageState extends State<HomePage> {
     // IOSNotificationDetails iOSPlatformChannelSpecifics = IOSNotificationDetails();
     NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
-
     print(remoteNotification);
-
     await flutterLocalNotificationsPlugin.show(
       0,
       remoteNotification.title,
@@ -225,8 +232,7 @@ class HomePageState extends State<HomePage> {
                       ),
                       margin: EdgeInsets.only(right: 10),
                     ),
-                    Text(
-                      'Yes',
+                    Text('Yes',
                       style: TextStyle(color: ColorConstants.primaryColor, fontWeight: FontWeight.bold),
                     )
                   ],
@@ -241,7 +247,6 @@ class HomePageState extends State<HomePage> {
         exit(0);
     }
   }
-
   Future<void> handleSignOut() async {
     authProvider.handleSignOut();
     Navigator.of(context).pushAndRemoveUntil(
@@ -270,7 +275,7 @@ class HomePageState extends State<HomePage> {
                 children: [
                   buildSearchBar(),
                   Expanded(
-                    child: StreamBuilder<QuerySnapshot>(
+                    child: StreamBuilder(
                       stream: homeProvider.getStreamFireStore(FirestoreConstants.pathUserCollection, _limit, _textSearch),
                       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
                         if (snapshot.hasData) {
@@ -283,7 +288,7 @@ class HomePageState extends State<HomePage> {
                             );
                           } else {
                             return Center(
-                              child: Text("No users"),
+                              child: Text("No users found"),
                             );
                           }
                         } else {
@@ -295,10 +300,8 @@ class HomePageState extends State<HomePage> {
                         }
                       },
                     ),
-                  ),
-                ],
+                  )],
               ),
-
               // Loading
               Positioned(
                 child: isLoading ? LoadingView() : SizedBox.shrink(),
@@ -310,7 +313,6 @@ class HomePageState extends State<HomePage> {
       ),
     );
   }
-
   Widget buildSearchBar() {
     return Container(
       height: 40,
@@ -351,7 +353,7 @@ class HomePageState extends State<HomePage> {
                 return snapshot.data == true
                     ? GestureDetector(
                         onTap: () {
-                          searchBarTec.clear();
+                          // searchBarTec.clear();
                           btnClearController.add(false);
                           setState(() {
                             _textSearch = "";
@@ -387,12 +389,10 @@ class HomePageState extends State<HomePage> {
                   Container(
                     width: 10,
                   ),
-                  Text(
-                    choice.title,
+                  Text(choice.title,
                     style: TextStyle(color: ColorConstants.primaryColor),
                   ),
-                ],
-              ));
+                ],));
         }).toList();
       },
     );
@@ -406,8 +406,7 @@ class HomePageState extends State<HomePage> {
       } else {
         return Container(
           child: TextButton(
-            child: Row(
-              children: <Widget>[
+            child: Row(children: <Widget>[
                 Material(
                   child: userChat.photoUrl.isNotEmpty
                       ? Image.network(

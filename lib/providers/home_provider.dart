@@ -5,7 +5,6 @@ import '../../constants/firestore_constants.dart';
 
 class HomeProvider {
   final FirebaseFirestore firebaseFirestore;
-
   HomeProvider({required this.firebaseFirestore});
 
   Future<void> updateDataFirestore(String collectionPath, String path, Map<String, String> dataNeedUpdate) {

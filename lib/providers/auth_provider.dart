@@ -1,8 +1,11 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:one_chat/constants/constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../Models/user_chat.dart';
@@ -40,7 +43,8 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> isLoggedIn() async {
     bool isLoggedIn = await googleSignIn.isSignedIn();
-    if (isLoggedIn && prefs.getString(FirestoreConstants.id)?.isNotEmpty == true) {
+    if (isLoggedIn &&
+        prefs.getString(FirestoreConstants.id)?.isNotEmpty == true) {
       return true;
     } else {
       return false;
@@ -59,7 +63,8 @@ class AuthProvider extends ChangeNotifier {
         idToken: googleAuth.idToken,
       );
 
-      User? firebaseUser = (await firebaseAuth.signInWithCredential(credential)).user;
+      User? firebaseUser =
+          (await firebaseAuth.signInWithCredential(credential)).user;
 
       if (firebaseUser != null) {
         final QuerySnapshot result = await firebaseFirestore
@@ -80,8 +85,10 @@ class AuthProvider extends ChangeNotifier {
           // Write data to local storage
           User? currentUser = firebaseUser;
           await prefs.setString(FirestoreConstants.id, currentUser.uid);
-          await prefs.setString(FirestoreConstants.nickname, currentUser.displayName ?? "");
-          await prefs.setString(FirestoreConstants.photoUrl, currentUser.photoURL ?? "");
+          await prefs.setString(
+              FirestoreConstants.nickname, currentUser.displayName ?? "");
+          await prefs.setString(
+              FirestoreConstants.photoUrl, currentUser.photoURL ?? "");
         } else {
           // Already sign up, just get data from firestore
           DocumentSnapshot documentSnapshot = documents[0];
@@ -117,5 +124,64 @@ class AuthProvider extends ChangeNotifier {
     await firebaseAuth.signOut();
     await googleSignIn.disconnect();
     await googleSignIn.signOut();
+  }
+
+  Future<bool> signInWithFacebook() async {
+      _status=Status.authenticating;
+      notifyListeners();
+
+      final LoginResult loginResult = await FacebookAuth.instance.login(
+        // permissions: ['email', 'public_profile', 'user_birthday']
+      );
+      final OAuthCredential facebookAuthCredential =
+      FacebookAuthProvider.credential(loginResult.accessToken!.token);
+
+      User? fbuser = (await FirebaseAuth.instance
+          .signInWithCredential(facebookAuthCredential))
+          .user;
+
+      if (fbuser != null) {
+        final QuerySnapshot result = await firebaseFirestore
+            .collection(FirestoreConstants.pathUserCollection)
+            .where(FirestoreConstants.id, isEqualTo: fbuser.uid)
+            .get();
+        final List<DocumentSnapshot> documents = result.docs;
+        if (documents.length == 0) {
+          firebaseFirestore
+              .collection(FirestoreConstants.pathUserCollection)
+              .doc(fbuser.uid)
+              .set({
+            FirestoreConstants.nickname: fbuser.displayName,
+            FirestoreConstants.photoUrl: fbuser.photoURL,
+            FirestoreConstants.id: fbuser.uid,
+            'createdAt': DateTime.now()
+                .millisecondsSinceEpoch.toString(),
+            FirestoreConstants.chattingWith: null
+          });
+          User? currentUser = fbuser;
+          await prefs.setString(FirestoreConstants.id, currentUser.uid);
+          await prefs.setString(
+              FirestoreConstants.nickname, currentUser.displayName ?? "");
+          await prefs.setString(
+              FirestoreConstants.photoUrl, currentUser.photoURL ?? "");
+        } else {
+          DocumentSnapshot documentSnapshot = documents[0];
+          UserChat userChat = UserChat.fromDocument(documentSnapshot);
+          // Write data to local
+          await prefs.setString(FirestoreConstants.id, userChat.id);
+          await prefs.setString(FirestoreConstants.nickname, userChat.nickname);
+          await prefs.setString(FirestoreConstants.photoUrl, userChat.photoUrl);
+          await prefs.setString(FirestoreConstants.aboutMe, userChat.aboutMe);
+        }
+        _status = Status.authenticated;
+        notifyListeners();
+        return true;
+      } else {
+        _status = Status.authenticateError;
+        notifyListeners();
+        return false;
+      }
+
+
   }
 }

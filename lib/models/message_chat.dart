@@ -24,6 +24,7 @@ class MessageChat {
       FirestoreConstants.timestamp: this.timestamp,
       FirestoreConstants.content: this.content,
       FirestoreConstants.type: this.type,
+
     };
   }
 

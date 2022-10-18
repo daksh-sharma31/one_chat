@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:one_chat/pages/login_page.dart';
 import 'package:provider/provider.dart';
 
 import '../../constants/color_constants.dart';

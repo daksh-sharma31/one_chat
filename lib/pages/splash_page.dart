@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:one_chat/pages/login_page.dart';
 
 import 'package:provider/provider.dart';
 
@@ -17,7 +18,7 @@ class SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 1), () {
+    Future.delayed(Duration(seconds: 5), () {
       // just delay for showing this slash page clearer because it too fast
       checkSignedIn();
     });
