@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">One chat firebase</string>
+    <string name="facebook_app_id">831486221189663</string>
+    <string name="fb_login_protocol_scheme">fb831486221189663</string>
+    <string name="facebook_client_token">19d4ff5af4986789fb8c7fd414c41ea4</string>
+
+</resources>
